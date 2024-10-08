@@ -31,7 +31,7 @@ let initList = function () {
 };
 
 // initList();
-// console.log(todoList[0]);
+
 //* handling GET request / getting data from server
 let getREQ = new XMLHttpRequest();
 getREQ.onreadystatechange = () => {
@@ -52,8 +52,7 @@ getREQ.send();
 
 //* handling PUT request / updating data on server
 let updateJSONbin = function () {
-  // ciało funkcji na podstawie https://jsonbin.io/api-reference/bins/update
-  // UWAGA: ta funkcja zastepuje całą zawartość bina
+  //! overwrites content on server
   let putREQ = new XMLHttpRequest();
 
   putREQ.onreadystatechange = () => {
@@ -68,33 +67,13 @@ let updateJSONbin = function () {
   putREQ.send(JSON.stringify(todoList));
 };
 
-//* updating list
-let updateTodoList = function () {
-  let todoListDiv = document.getElementById("todoListView");
-
-  //remove all elements
-  while (todoListDiv.firstChild) {
-    todoListDiv.removeChild(todoListDiv.firstChild);
+//* updating table
+let updateTodoTable = function () {
+  let todoTable = document.getElementById("todoTableView");
+  // remove all elements
+  while (todoTable.rows.length > 1) {
+    todoTable.deleteRow(1);
   }
-
-  //! old add all elements
-  //   for (let todo in todoList) {
-  //     let newElement = document.createElement("div");
-  //     let newContent = document.createTextNode(
-  //       todoList[todo].title + " " + todoList[todo].description
-  //     );
-  //     //create delete button
-  //     let newDeleteButton = document.createElement("input");
-  //     newDeleteButton.type = "button";
-  //     newDeleteButton.value = "x";
-  //     newDeleteButton.addEventListener("click", function () {
-  //       deleteTodo(todo);
-  //       window.localStorage.setItem(LOCALLY_SAVED_LIST_KEY, JSON.stringify(todoList));
-  //     });
-  //     newElement.appendChild(newContent);
-  //     newElement.appendChild(newDeleteButton);
-  //     todoListDiv.appendChild(newElement);
-  //   }
 
   //add all elements
   let filterInput = document.getElementById("inputSearch");
@@ -108,10 +87,11 @@ let updateTodoList = function () {
         .toLowerCase()
         .includes(filterInput.value.toLowerCase())
     ) {
-      let newElement = document.createElement("p");
-      let newContent = document.createTextNode(
-        todoList[todo].title + " " + todoList[todo].description
-      );
+      let newElement = document.createElement("tr");
+      let newTitle = document.createElement("td");
+      newTitle.textContent = todoList[todo].title;
+      let newDesc = document.createElement("td");
+      newDesc.textContent = todoList[todo].description;
 
       //create delete button
       let newDeleteButton = document.createElement("input");
@@ -119,20 +99,20 @@ let updateTodoList = function () {
       newDeleteButton.value = "x";
       newDeleteButton.addEventListener("click", function () {
         deleteTodo(todo);
-        // window.localStorage.setItem(
-        //   LOCALLY_SAVED_LIST_KEY,
-        //   JSON.stringify(todoList)
-        // );
       });
-      newElement.appendChild(newContent);
-      newElement.appendChild(newDeleteButton);
-      todoListDiv.appendChild(newElement);
+      let newDeleteTD = document.createElement("td");
+      newDeleteTD.appendChild(newDeleteButton);
+
+      newElement.appendChild(newTitle);
+      newElement.appendChild(newDesc);
+      newElement.appendChild(newDeleteTD);
+
+      todoTable.appendChild(newElement);
     }
   }
-  //   console.log(JSON.stringify(todoList));
 };
-
-setInterval(updateTodoList, 1000);
+setInterval(updateTodoTable, 1000);
+// setTimeout(updateTodoTable, 1000);
 
 //* delete element (called by EventListener)
 let deleteTodo = function (index) {
@@ -160,9 +140,8 @@ let addTodo = function () {
     category: "",
     dueDate: newDate,
   };
+
   //add item to the list
   todoList.push(newTodo);
   updateJSONbin();
-  //save item locally
-  //window.localStorage.setItem(LOCALLY_SAVED_LIST_KEY, JSON.stringify(todoList));
 };
