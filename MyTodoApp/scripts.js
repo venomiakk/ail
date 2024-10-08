@@ -8,29 +8,27 @@ let todoList = [];
 
 //* list initialization
 let initList = function () {
-  let savedList = window.localStorage.getItem(LOCALLY_SAVED_LIST_KEY);
-  if (savedList != null) todoList = JSON.parse(savedList);
+  // let savedList = window.localStorage.getItem(LOCALLY_SAVED_LIST_KEY);
+  // if (savedList != null) todoList = JSON.parse(savedList);
   //code creating a default list with 2 items
-  else
-    todoList.push(
-      {
-        title: "Learn JS",
-        description: "Create a demo application for my TODO's",
-        place: "445",
-        category: "",
-        dueDate: new Date(2024, 10, 16),
-      },
-      {
-        title: "Lecture test",
-        description: "Quick test from the first three lectures",
-        place: "F6",
-        category: "",
-        dueDate: new Date(2024, 10, 17),
-      }
-    );
+  // else
+  todoList.push(
+    {
+      title: "Learn JS",
+      description: "Create a demo application for my TODO's",
+      place: "445",
+      category: "",
+      dueDate: new Date(2024, 10, 16),
+    },
+    {
+      title: "Lecture test",
+      description: "Quick test from the first three lectures",
+      place: "F6",
+      category: "",
+      dueDate: new Date(2024, 10, 17),
+    }
+  );
 };
-
-// initList();
 
 //* handling GET request / getting data from server
 let getREQ = new XMLHttpRequest();
@@ -42,6 +40,7 @@ getREQ.onreadystatechange = () => {
       todoList = responseObject.record;
     } else {
       console.error("Request failed with status: " + getREQ.status);
+      initList();
     }
   }
 };
@@ -57,7 +56,11 @@ let updateJSONbin = function () {
 
   putREQ.onreadystatechange = () => {
     if (putREQ.readyState == XMLHttpRequest.DONE) {
-      console.log(putREQ.responseText);
+      if (putREQ.status == 200) {
+        console.log(putREQ.responseText);
+      } else {
+        console.error("Request failed with status: " + putREQ.status);
+      }
     }
   };
 
@@ -90,13 +93,15 @@ let updateTodoTable = function () {
       let newElement = document.createElement("tr");
       let newTitle = document.createElement("td");
       newTitle.textContent = todoList[todo].title;
+      newTitle.className = "p-2 classTitle";
       let newDesc = document.createElement("td");
       newDesc.textContent = todoList[todo].description;
-
+      newDesc.className = "p-2 classDesc";
       //create delete button
-      let newDeleteButton = document.createElement("input");
+      let newDeleteButton = document.createElement("button");
       newDeleteButton.type = "button";
-      newDeleteButton.value = "x";
+      newDeleteButton.className = "btn btn-danger m-3";
+      newDeleteButton.innerHTML = '<i class="bi bi-trash3-fill"></i>';
       newDeleteButton.addEventListener("click", function () {
         deleteTodo(todo);
       });
