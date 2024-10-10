@@ -116,8 +116,8 @@ let updateTodoTable = function () {
     }
   }
 };
-setInterval(updateTodoTable, 1000);
-// setTimeout(updateTodoTable, 1000);
+// setInterval(updateTodoTable, 1000);
+setTimeout(updateTodoTable, 1000);
 
 //* delete element (called by EventListener)
 let deleteTodo = function (index) {

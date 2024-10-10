@@ -38,10 +38,18 @@
               id="inputSearch"
               placeholder="Type Your search here..."
               class="form-control"
-              aria-label="Search"
             />
           </div>
-          <div id="todoListView"></div>
+          <div class="row mb-3">
+            <div class="col input-group">
+              <label class="input-group-text">From</label>
+              <input type="date" id="startDate" class="form-control" />
+            </div>
+            <div class="col input-group">
+              <label class="input-group-text">To</label>
+              <input type="date" id="endDate" class="form-control" />
+            </div>
+          </div>
           <table id="todoTableView" class="table">
             <tr id="todoHeadRow">
               <th class="text-center">Title</th>
