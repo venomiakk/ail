@@ -1,152 +1,179 @@
-"use strict";
-let LOCALLY_SAVED_LIST_KEY = "todos";
-let BIN_ID = "6705396fe41b4d34e43f27dc";
-let BIN_ROOT = "https://api.jsonbin.io/v3";
-let BIN_API_KEY =
-  "$2a$10$hAg2rcgTpOpUtPAQKvgXC.5gciFw4Kz8Xf2tYmvteo2Mm5lKQwkcu";
+
+const binApiKey = import.meta.env.VITE_binApiKey;
+const binId= import.meta.env.VITE_binId;
+const aiKey = import.meta.env.VITE_aiKey;
+
+
+let generateCategory = async function (description) {
+    try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${aiKey}` 
+            },
+            body: JSON.stringify({
+                model: 'llama3-8b-8192',
+                messages: [{ role: 'user', content: 'jaką kategorię zadania na liście zadań do zrobienia przypisałbyś "' + description + '", podaj jedno slowo jako odpowiedź na to pytanie' }]
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Błąd sieci lub API');
+        }
+
+        const data = await response.json();
+        return data.choices[0].message.content;
+    } catch (error) {
+        return 'Inne';
+    }
+}
+
+
 let todoList = [];
+let todoTable = document.getElementById("todoTableView");
 
-//* list initialization
-let initList = function () {
-  // let savedList = window.localStorage.getItem(LOCALLY_SAVED_LIST_KEY);
-  // if (savedList != null) todoList = JSON.parse(savedList);
-  //code creating a default list with 2 items
-  // else
-  todoList.push(
-    {
-      title: "Learn JS",
-      description: "Create a demo application for my TODO's",
-      place: "445",
-      category: "",
-      dueDate: new Date(2024, 10, 16),
-    },
-    {
-      title: "Lecture test",
-      description: "Quick test from the first three lectures",
-      place: "F6",
-      category: "",
-      dueDate: new Date(2024, 10, 17),
+function generateTable(data) {
+    for (let item in data) {
+        let newElement = document.createElement("tr");
+        let newTitle = document.createElement("td");
+        newTitle.textContent = data[item].title;
+        newTitle.className = "p-2 classTitle";
+        let newDesc = document.createElement("td");
+        newDesc.textContent = data[item].description;
+        newDesc.className = "p-2 classDesc";
+        let newCat = document.createElement("td");
+        newCat.textContent = data[item].category;
+        newCat.className = "p-2 classDesc";
+        let dueDate = document.createElement("td");
+        let date  = new Date(data[item].dueDate);
+        dueDate.textContent = date.toLocaleDateString('pl-PL');
+        dueDate.className = "p-2 classDesc";
+        let newDeleteButton = document.createElement("button");
+        newDeleteButton.type = "button";
+        newDeleteButton.className = "btn btn-danger m-3";
+        newDeleteButton.innerHTML = '<i class="bi bi-trash3-fill"></i>';
+        newDeleteButton.addEventListener("click", function () {
+          deleteTodo(item);
+        });
+        let newDeleteTD = document.createElement("td");
+        newDeleteTD.appendChild(newDeleteButton);
+        newElement.appendChild(newTitle);
+        newElement.appendChild(newDesc);
+        newElement.appendChild(newCat);
+        newElement.appendChild(dueDate);
+        newElement.appendChild(newDeleteTD);
+        todoTable.appendChild(newElement);
     }
-  );
-};
+}
 
-//* handling GET request / getting data from server
-let getREQ = new XMLHttpRequest();
-getREQ.onreadystatechange = () => {
-  if (getREQ.readyState == XMLHttpRequest.DONE) {
-    if (getREQ.status == 200) {
-      let responseObject = JSON.parse(getREQ.responseText);
-      //   console.log(responseObject.record);
-      todoList = responseObject.record;
-    } else {
-      console.error("Request failed with status: " + getREQ.status);
-      initList();
+let updateRepository = () => {
+    try{
+        let req = new XMLHttpRequest();
+
+        req.onreadystatechange = () => {
+            if (req.readyState == XMLHttpRequest.DONE) {
+                console.log(req.responseText);
+            }
+        };
+        req.open("PUT", binId, true);
+        req.setRequestHeader("Content-Type", "application/json");
+        req.setRequestHeader("X-Master-Key", binApiKey);
+        req.send(JSON.stringify(todoList));
+    }catch(err){
+        console.error(err);
     }
-  }
-};
-getREQ.open("GET", `${BIN_ROOT}/b/${BIN_ID}/latest`, true);
-// "https://api.jsonbin.io/v3/b/<BIN_ID>/<BIN_VERSION | latest>",
-getREQ.setRequestHeader("X-Master-Key", BIN_API_KEY);
-getREQ.send();
+    
+}
 
-//* handling PUT request / updating data on server
-let updateJSONbin = function () {
-  //! overwrites content on server
-  let putREQ = new XMLHttpRequest();
 
-  putREQ.onreadystatechange = () => {
-    if (putREQ.readyState == XMLHttpRequest.DONE) {
-      if (putREQ.status == 200) {
-        console.log(putREQ.responseText);
-      } else {
-        console.error("Request failed with status: " + putREQ.status);
-      }
+let initList = () => {
+    try{
+        let req = new XMLHttpRequest();
+        req.onreadystatechange = () => {
+            if (req.readyState == XMLHttpRequest.DONE) {
+                let obj = JSON.parse(req.responseText);
+                todoList = obj.record;
+                updateTodoList();
+    
+            }
+        };
+        req.open("GET", binId, true);
+        req.setRequestHeader("X-Master-Key", binApiKey);
+        req.send();
+    }catch(err){
+        console.error(err);
     }
-  };
+    
+}
 
-  putREQ.open("PUT", `${BIN_ROOT}/b/${BIN_ID}`, true);
-  putREQ.setRequestHeader("Content-Type", "application/json");
-  putREQ.setRequestHeader("X-Master-Key", BIN_API_KEY);
-  putREQ.send(JSON.stringify(todoList));
-};
-
-//* updating table
-let updateTodoTable = function () {
-  let todoTable = document.getElementById("todoTableView");
-  // remove all elements
-  while (todoTable.rows.length > 1) {
-    todoTable.deleteRow(1);
-  }
-
-  //add all elements
-  let filterInput = document.getElementById("inputSearch");
-  for (let todo in todoList) {
-    if (
-      filterInput.value == "" ||
-      todoList[todo].title
-        .toLowerCase()
-        .includes(filterInput.value.toLowerCase()) ||
-      todoList[todo].description
-        .toLowerCase()
-        .includes(filterInput.value.toLowerCase())
-    ) {
-      let newElement = document.createElement("tr");
-      let newTitle = document.createElement("td");
-      newTitle.textContent = todoList[todo].title;
-      newTitle.className = "p-2 classTitle";
-      let newDesc = document.createElement("td");
-      newDesc.textContent = todoList[todo].description;
-      newDesc.className = "p-2 classDesc";
-      //create delete button
-      let newDeleteButton = document.createElement("button");
-      newDeleteButton.type = "button";
-      newDeleteButton.className = "btn btn-danger m-3";
-      newDeleteButton.innerHTML = '<i class="bi bi-trash3-fill"></i>';
-      newDeleteButton.addEventListener("click", function () {
-        deleteTodo(todo);
-      });
-      let newDeleteTD = document.createElement("td");
-      newDeleteTD.appendChild(newDeleteButton);
-
-      newElement.appendChild(newTitle);
-      newElement.appendChild(newDesc);
-      newElement.appendChild(newDeleteTD);
-
-      todoTable.appendChild(newElement);
-    }
-  }
-};
-// setInterval(updateTodoTable, 1000);
-setTimeout(updateTodoTable, 1000);
-
-//* delete element (called by EventListener)
 let deleteTodo = function (index) {
-  todoList.splice(index, 1);
-  updateJSONbin();
+    todoList.splice(index, 1)
+    updateRepository();
+}
+
+
+let checkText = function(string){
+    let filterInput = document.getElementById("inputSearch");
+    if(filterInput.value == "" ||
+    string.toLowerCase().includes(filterInput.value.toLowerCase()) ||
+    string.toLowerCase().includes(filterInput.value.toLowerCase())){
+        return true;
+    }
 };
 
-//* add elements via form
-let addTodo = function () {
-  //get the elements in the form
-  let inputTitle = document.getElementById("inputTitle");
-  let inputDescription = document.getElementById("inputDescription");
-  let inputPlace = document.getElementById("inputPlace");
-  let inputDate = document.getElementById("inputDate");
-  //get the values from the form
-  let newTitle = inputTitle.value;
-  let newDescription = inputDescription.value;
-  let newPlace = inputPlace.value;
-  let newDate = new Date(inputDate.value);
-  //create new item
-  let newTodo = {
-    title: newTitle,
-    description: newDescription,
-    place: newPlace,
-    category: "",
-    dueDate: newDate,
-  };
-
-  //add item to the list
-  todoList.push(newTodo);
-  updateJSONbin();
+let checkFirstDate = function(date){
+    let dateFrom = document.getElementById("startDate");
+    if(dateFrom.value == ''){
+        return true;
+    }else if(date > dateFrom.value){
+        return true;
+    }
+    return false
 };
+
+let checkEndDate = function(date){
+    let dateTo = document.getElementById("endDate");
+    if(dateTo.value==''){
+        return true;
+    }else if(date < dateTo.value){
+        return true;
+    }
+    return false
+};
+
+
+let updateTodoList = function () {
+    while (todoTable.rows.length > 1) {
+        todoTable.deleteRow(1);
+      }
+
+    let tempArray = todoList.filter((todo) => checkText(todo.description)&&checkFirstDate(todo.dueDate)&&checkEndDate(todo.dueDate));
+    generateTable(tempArray) 
+}
+
+let addTodo = async function () {
+    let inputTitle = document.getElementById("inputTitle");
+    let inputDescription = document.getElementById("inputDescription");
+    let inputPlace = document.getElementById("inputPlace");
+    let inputDate = document.getElementById("inputDate");
+    let newTitle = inputTitle.value;
+    let newDescription = inputDescription.value;
+    let newPlace = inputPlace.value;
+    let newDate = new Date(inputDate.value);
+    let newTodo = {
+        title: newTitle,
+        description: newDescription,
+        place: newPlace,
+        category: await generateCategory(newDescription),
+        dueDate: newDate
+    };
+    todoList.push(newTodo);
+    updateRepository();
+    document.getElementById("taskForm").reset();
+}
+document.querySelector('#addButton').addEventListener('click', addTodo);
+setInterval(updateTodoList, 1000);
+initList();
+
+
