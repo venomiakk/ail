@@ -51,7 +51,7 @@ db.createCollection("products", {
           description: "Must be a positive number.",
         },
         category_id: {
-          bsonType: "string",
+          bsonType: "objectId",
           description: "Must be a valid category identifier.",
         },
       },
@@ -81,6 +81,7 @@ db.createCollection("orders", {
     $jsonSchema: {
       bsonType: "object",
       required: [
+        "user_id",
         "user_name",
         "email",
         "phone",
@@ -90,6 +91,10 @@ db.createCollection("orders", {
         "date_approved",
       ],
       properties: {
+        user_id: {
+          bsonType: "objectId",
+          description: "Must be valid user_id.",
+        },
         user_name: {
           bsonType: "string",
           description: "Must be a string and is required.",
@@ -111,7 +116,7 @@ db.createCollection("orders", {
             required: ["product_id", "quantity", "unit_price"],
             properties: {
               product_id: {
-                bsonType: "string",
+                bsonType: "objectId",
                 description: "Must be a valid product identifier.",
               },
               quantity: {
@@ -163,12 +168,13 @@ db.createCollection("users", {
         },
         email: {
           bsonType: "string",
-          pattern: "^[\\w.%+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$",
+          pattern: "^[^@]+@[^@]+.[^@]+$",
           description: "Must be a valid email address and is required.",
         },
         phone_num: {
           bsonType: "string",
-          description: "Must be phone number",
+          pattern: "^\\d{9}$",
+          description: "Must be phone number and is required.",
         },
         role: {
           bsonType: "string",
@@ -196,10 +202,10 @@ db.order_statuses.insertMany([
 
 // Initial data for the categories collection
 db.categories.insertMany([
-  { _id: "cat1", name: "Electronics" },
-  { _id: "cat2", name: "Home Appliances" },
-  { _id: "cat3", name: "Books" },
-  { _id: "cat4", name: "Clothing" },
+  { name: "Electronics" },
+  { name: "Home Appliances" },
+  { name: "Books" },
+  { name: "Clothing" },
 ]);
 
 // Initial products
@@ -247,12 +253,29 @@ db.users.insertOne({
 
 // Example of inserting a document into the orders collection
 db.orders.insertOne({
-  user_name: "johndoe",
-  email: "john.doe@example.com",
-  phone: "123456789",
+  user_id: db.users.findOne({ user_name: "johndoe" })._id,
+  user_name: db.users.findOne({ user_name: "johndoe" }).user_name,
+  email: db.users.findOne({ user_name: "johndoe" }).email,
+  phone: db.users.findOne({ user_name: "johndoe" }).phone_num,
   items: [
-    { product_id: "prod1", quantity: 2, unit_price: 15.5 },
-    { product_id: "prod2", quantity: 1, unit_price: 45.5 },
+    {
+      product_id: db.products.findOne({
+        _id: ObjectId("674f456492f0df7227893c0f"),
+      })._id,
+      quantity: 2,
+      unit_price: db.products.findOne({
+        _id: ObjectId("674f456492f0df7227893c0f"),
+      }).unit_price,
+    },
+    {
+      product_id: db.products.findOne({
+        _id: ObjectId("674f456492f0df7227893c11"),
+      })._id,
+      quantity: 1,
+      unit_price: db.products.findOne({
+        _id: ObjectId("674f456492f0df7227893c11"),
+      }).unit_price,
+    },
   ],
   status_id: "status1",
   date_approved: null,

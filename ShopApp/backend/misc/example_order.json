@@ -1,0 +1,21 @@
+{
+    "user_id": "674f459992f0df7227893c14",
+    "user_name": "johndoe",
+    "email": "johndoe@example.com",
+    "phone": "123456789",
+    "items": [
+      {
+        "product_id": "674f456492f0df7227893c0f",
+        "quantity": 2,
+        "unit_price": 999.99
+      },
+      {
+        "product_id":  "674f456492f0df7227893c11",
+        "quantity": 1,
+        "unit_price": 15.99
+      }
+    ],
+    "status_id": "status1",
+    "date_approved": null,
+    "date_ordered": "2024-12-03T18:06:52.367Z"
+  }

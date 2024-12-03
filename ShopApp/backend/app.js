@@ -1,13 +1,14 @@
 import express from "express";
 import connectToDb from "./db.js";
-import Product from "./models/Product.js";
-import OrderStatus from "./models/OrderStatus.js";
-import User from "./models/User.js";
-import Order from "./models/Order.js";
-import Category from "./models/Category.js";
+import categoriesRouter from "./routes/categoriesRoutes.js";
+import statusesRouter from "./routes/StatusesRoutes.js";
+import ordersRouter from "./routes/OrdersRoutes.js";
+import usersRouter from "./routes/usersRoutes.js";
+import productsRouter from "./routes/productsRoutes.js";
 
 //init app & middleware
 const app = express();
+app.use(express.json());
 
 // connection to database
 connectToDb()
@@ -22,51 +23,15 @@ connectToDb()
   });
 
 // routes
-app.get("/test", (req, res) => {
-  res.json({ mssg: "Test route" });
-});
 
-app.get("/products", async (req, res) => {
-  try {
-    const products = await Product.find();
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching products", error });
-  }
-});
+// region products routes
 
-app.get("/orderstatuses", async (req, res) => {
-  try {
-    const orderStatuses = await OrderStatus.find();
-    res.json(orderStatuses);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching order statuses: ", error });
-  }
-});
+app.use("/products", productsRouter)
 
-app.get("/users", async (req, res) => {
-  try {
-    const users = await User.find();
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching users: ", error });
-  }
-});
+app.use("/status", statusesRouter);
 
-app.get("/orders", async (req, res) => {
-  try {
-    const orders = await Order.find();
-    res.json(orders);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching orders: ", error });
-  }
-});
+app.use("/users", usersRouter);
 
-app.get("/categories", async (req, res) => {
-  try {
-    const categories = await Category.find();
-    res.json(categories);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching categories: ", error });
-  }
-});
+app.use("/orders", ordersRouter);
+
+app.use("/categories", categoriesRouter);
