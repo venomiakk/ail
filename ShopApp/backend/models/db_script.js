@@ -151,7 +151,7 @@ db.createCollection("users", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
-      required: ["user_name", "password", "email", "role"],
+      required: ["user_name", "password", "email", "phone_num", "role"],
       properties: {
         user_name: {
           bsonType: "string",
@@ -165,6 +165,10 @@ db.createCollection("users", {
           bsonType: "string",
           pattern: "^[\\w.%+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$",
           description: "Must be a valid email address and is required.",
+        },
+        phone_num: {
+          bsonType: "string",
+          description: "Must be phone number",
         },
         role: {
           bsonType: "string",
@@ -233,23 +237,24 @@ db.products.insertMany([
   },
 ]);
 
-// db.users.insertOne({
-//     user_name: "johndoe",
-//     password: "hashed_password_here",
-//     email: "johndoe@example.com",
-//     role: "client"
-//   });
+db.users.insertOne({
+  user_name: "johndoe",
+  password: "hashed_password_here",
+  email: "johndoe@example.com",
+  phone_num: "123456789",
+  role: "client",
+});
 
 // Example of inserting a document into the orders collection
-// db.orders.insertOne({
-//   user_name: "JohnDoe",
-//   email: "john.doe@example.com",
-//   phone: "123456789",
-//   items: [
-//     { product_id: "prod1", quantity: 2, unit_price: 15.5 },
-//     { product_id: "prod2", quantity: 1, unit_price: 45.0 }
-//   ],
-//   status_id: "status1",
-//   date_approved: null,
-//   date_ordered: new Date()
-// });
+db.orders.insertOne({
+  user_name: "johndoe",
+  email: "john.doe@example.com",
+  phone: "123456789",
+  items: [
+    { product_id: "prod1", quantity: 2, unit_price: 15.5 },
+    { product_id: "prod2", quantity: 1, unit_price: 45.5 },
+  ],
+  status_id: "status1",
+  date_approved: null,
+  date_ordered: new Date(),
+});
