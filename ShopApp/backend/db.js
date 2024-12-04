@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+
 async function connectToDb() {
   try {
     await mongoose.connect("mongodb://localhost:27017/ail_shop1");

@@ -5,10 +5,19 @@ import statusesRouter from "./routes/StatusesRoutes.js";
 import ordersRouter from "./routes/OrdersRoutes.js";
 import usersRouter from "./routes/usersRoutes.js";
 import productsRouter from "./routes/productsRoutes.js";
+import { ReasonPhrases, StatusCodes } from "http-status-codes";
 
 //init app & middleware
 const app = express();
 app.use(express.json());
+
+// middleware error handling
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+    error: ReasonPhrases.INTERNAL_SERVER_ERROR,
+  });
+});
 
 // connection to database
 connectToDb()
@@ -26,7 +35,7 @@ connectToDb()
 
 // region products routes
 
-app.use("/products", productsRouter)
+app.use("/products", productsRouter);
 
 app.use("/status", statusesRouter);
 

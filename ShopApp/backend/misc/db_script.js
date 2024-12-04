@@ -106,7 +106,8 @@ db.createCollection("orders", {
         },
         phone: {
           bsonType: "string",
-          description: "Must be a string.",
+          pattern: "^\\d{9}$",
+          description: "Must be phone number and is required.",
         },
         items: {
           bsonType: "array",
